@@ -1,0 +1,4 @@
+(library
+ (name semquery)
+ (libraries domain analysis syntax)
+)

@@ -41,3 +41,13 @@ Analyzed graphs are stored in `.dot` files.
   and converts analyzed graphs to a visual representation in `.ps` files
   using Graphviz.
 - The resulting graphs can be found in `_build/default/`.
+
+## Graph exploration
+
+### Locations
+
+Locations originating from the control-flow graph are denoted with `l<number>`.
+They can be visually identified in `.ps` files as `l<number>: <abstract state>`
+in green-bordered rectangles.
+
+

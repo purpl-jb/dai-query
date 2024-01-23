@@ -1,5 +1,5 @@
 (library
  (name usertest)
- (libraries dai frontend analysis domain syntax)
+ (libraries dai frontend analysis domain syntax semquery)
  (inline_tests)
  (preprocess (pps ppx_inline_test)))

@@ -98,9 +98,9 @@ end
 module DomWithDataStructures (T : sig
   include Dom
 
-  val compare : t -> t -> int
+  (* val compare : t -> t -> int
 
-  val sexp_of_t : t -> Ppx_sexp_conv_lib.Sexp.t
+  val sexp_of_t : t -> Ppx_sexp_conv_lib.Sexp.t *)
 end) : sig
   include Dom with type t = T.t
 

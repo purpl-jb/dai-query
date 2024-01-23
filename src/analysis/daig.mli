@@ -96,4 +96,11 @@ module type Sig = sig
   val nonempty_astate_refs : t -> int
 end
 
+(* JB: this used to rely on destructive substitution [absstate :=]
+
 module Make (Dom : Abstract.Dom) : Sig with type absstate := Dom.t
+
+but in that case, [absstate] is removed from the resulting Daig.
+And I needed the [absstate] type member for semantic querying.
+*)
+module Make (Dom : Abstract.Dom) : Sig with type absstate = Dom.t

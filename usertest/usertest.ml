@@ -3,6 +3,8 @@ open Dai.Import
 module Test (Dom : Domain.Abstract.Dom) = struct
 	module Daig = Analysis.Daig.Make (Dom)
 	module Dsg = Analysis.Dsg.Make (Dom)
+  module SemqrDaig = Semquery.Processor.MakeForDaig (Daig)
+  module Printer = Semquery.Printer.Make (Dom)
 	
 	let dname = "usertest/"
 
@@ -13,13 +15,19 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		in
 		Map.to_alist cfgs
 		|> List.iter ~f:(fun (fn, cfg) ->
-		       let daig = Daig.of_cfg ~entry_state:(Dom.init ()) ~cfg ~fn in
-		       let fname_ = fname ^ "_" in
-		       Daig.dump_dot ~filename:(abs_of_rel_path (fname_ ^ fn.method_id.method_name ^ ".dot")) daig;
-		       let _, analyzed_daig = Daig.get_by_loc fn.exit daig in
-		       Daig.dump_dot
-		         ~filename:(abs_of_rel_path ("analyzed_" ^ fname_ ^ fn.method_id.method_name ^ ".dot"))
-		         analyzed_daig);
+          let daig = Daig.of_cfg ~entry_state:(Dom.init ()) ~cfg ~fn in
+          let fname_ = fname ^ "_" in
+          Daig.dump_dot ~filename:(abs_of_rel_path (fname_ ^ fn.method_id.method_name ^ ".dot")) daig;
+          (* prints the location of the function exit *)
+          print_endline @@ Format.asprintf "%s.%s exit loc: %a" fname fn.method_id.method_name Syntax.Cfg.Loc.pp fn.exit;
+          let _, analyzed_daig = Daig.get_by_loc fn.exit daig in
+          Daig.dump_dot
+            ~filename:(abs_of_rel_path ("analyzed_" ^ fname_ ^ fn.method_id.method_name ^ ".dot"))
+            analyzed_daig
+          ;
+          Printer.println_option_absst @@
+            SemqrDaig.read_absst_by_loc fn.exit analyzed_daig
+       );
 		true
 end
 
