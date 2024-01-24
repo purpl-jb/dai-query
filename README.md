@@ -42,6 +42,16 @@ Analyzed graphs are stored in `.dot` files.
   using Graphviz.
 - The resulting graphs can be found in `_build/default/`.
 
+## Semantic Querying
+
+File [`src/semqrunner.ml`](src/semqrunner.ml)
+provides a simple command-line interface for
+exploring DAIG abstract states (see the script for more info).
+
+Run
+`_build/default/src/semqrunner.exe _build/default/usertest/Sum.java`
+as an example.
+
 ## Graph exploration
 
 ### Locations

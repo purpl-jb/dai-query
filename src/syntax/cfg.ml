@@ -127,6 +127,8 @@ module Fn = struct
     let is_same_class fn1 fn2 =
       String.equal fn1.method_id.class_name fn2.method_id.class_name
       && List.equal String.equal fn1.method_id.package fn2.method_id.package
+
+    let is_main_fn fn = String.equal "main" fn.method_id.method_name
   end
 
   include T

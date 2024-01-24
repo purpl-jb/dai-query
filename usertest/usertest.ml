@@ -3,12 +3,13 @@ open Dai.Import
 module Test (Dom : Domain.Abstract.Dom) = struct
 	module Daig = Analysis.Daig.Make (Dom)
 	module Dsg = Analysis.Dsg.Make (Dom)
-  module SemqrDaig = Semquery.Processor.MakeForDaig (Daig)
+  module SemqrDaig = Semquery.Processor.MakeForDaig (Dom) (Daig)
   module Printer = Semquery.Printer.Make (Dom)
 	
 	let dname = "usertest/"
 
   (* JB: this code is mostly copied from src/analysis/daig.ml *)
+  (* TODO: abs_of_rel_path doesn't seem to be needed? *)
 	let test_simple fname = 
 		let ({ cfgs; _ } : Frontend.Cfg_parser.prgm_parse_result) =
 		  Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
@@ -25,6 +26,7 @@ module Test (Dom : Domain.Abstract.Dom) = struct
             ~filename:(abs_of_rel_path ("analyzed_" ^ fname_ ^ fn.method_id.method_name ^ ".dot"))
             analyzed_daig
           ;
+          (* reads and prints the abstrate state at the function exit *)
           Printer.println_option_absst @@
             SemqrDaig.read_absst_by_loc fn.exit analyzed_daig
        );

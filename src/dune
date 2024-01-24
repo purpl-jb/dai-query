@@ -12,3 +12,10 @@
  (libraries dai frontend analysis domain)
  (preprocess (pps ppx_let))
 )
+
+(executable
+ (name semqrunner)
+ (modules semqrunner)
+ (libraries core analysis domain syntax semquery)
+ (preprocess (pps ppx_jane))
+)
