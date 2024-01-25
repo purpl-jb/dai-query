@@ -1,7 +1,7 @@
 open Core
 open Syntax
 
-module Dom = Domain.Array_bounds 
+module Dom = Domain.Itv 
 (* Itv Array_bounds *)
 
 module Daig = Analysis.Daig.Make(Dom)
@@ -14,39 +14,90 @@ The program takes one argument -- the name of a .java file.
 The program loads the file into a daig, dumping its visual representation,
 and starts a simple REPL.
 
-The REPL expects an integer representing a DAIG location and
-prints out the abstract state at the location.
+The REPL processes the following commands:
+- q: quit
+- p <intloc>: prints out the abstract state at the DAIG location
+  represented by <intloc>
+- c <intloc> <formula>: checks <formula> at the DAIG location <intloc>
+  where <formula> is <var>=<int>;
+  [0,0] means false, [1,1] means true, [0,1] means maybe
 
-Note: the analysis domain is hard-coded as [Dom] above.
+Note: the interval analysis domain is hard-coded as [Dom] above.
 *)
+
+(* ============================== Aux *)
+
+let println_error errstr =
+  print_endline @@ "ERROR: " ^ errstr
 
 (* ============================== Processing one request *)
 
-let process_location (daig : Daig.t) (loc : int) : unit =
+(* let sample_formula = Ast.Expr.Binop { 
+  l = Ast.Expr.Var "a";
+  op = Ast.Binop.Eq; 
+  r = Ast.Expr.Lit (Ast.Lit.Int 2L);
+} *)
+
+(* formula has to be of the form <var>=<int> *)
+let parse_formula (formula : string) : Ast.Expr.t option =
+  let parts = Stdlib.String.split_on_char '=' formula in
+  match parts with
+  | [var; intval] -> Some (Ast.Expr.Binop { 
+      l = Ast.Expr.Var var;
+      op = Ast.Binop.Eq; 
+      r = Ast.Expr.Lit (Ast.Lit.Int (Int64.of_string intval));
+    })
+  | _ -> None
+
+let eval_formula (absst : Dom.t) (formula : Ast.Expr.t) : Apron.Interval.t option =
+  let otexpr = Dom.texpr_of_expr absst formula in
+  match otexpr with
+  | None -> None
+  | Some texpr -> Some (Dom.eval_texpr absst texpr)
+
+let process_location_request_impl
+  (daig : Daig.t) ?formula (locstr : string) : unit 
+=
+  let loc = int_of_string locstr in
   let oabsst = SemqrDaig.read_absst_by_intloc_unsafe loc daig in
-  Printer.println_option_absst oabsst
+  match formula with
+  | None -> Printer.println_option_absst oabsst
+  | Some formula -> 
+      match oabsst with
+      | None -> print_endline "UNKNOWN (state is None)"
+      | Some absst -> 
+          let oitv = Option.bind (parse_formula formula) ~f:(eval_formula absst) in 
+          match oitv with
+          | None -> println_error "could not parse or eval the formula"
+          | Some itv -> print_endline @@
+              Format.asprintf "%a" Dom.pp_interval itv
 
-let process_location_request (daig : Daig.t) (request : string) : unit =
-  try 
-    let loc = int_of_string request in
-    try process_location daig loc 
-    with Daig.Ref_not_found _ -> 
-      print_endline @@ "ERROR: no location " ^ request
-  with Failure _ -> 
-    print_endline "ERROR: integer expected"
+let process_location_request (daig : Daig.t) ?formula (locstr : string) : unit =
+  try process_location_request_impl daig ?formula locstr with 
+  | Daig.Ref_not_found _ -> 
+      println_error @@ "no location " ^ locstr
+  | Failure errstr -> 
+      println_error errstr
 
-let process_request (daig : Daig.t) (request : string) : bool =
+let process_request (daig : Daig.t) (request : string) : unit =
+  let req_list = Stdlib.String.split_on_char ' ' request in
+  match req_list with 
+  | ["p"; loc] -> process_location_request daig loc
+  | ["c"; loc; formula] -> process_location_request daig loc ~formula
+  | _ -> println_error "unknown command"
+
+let read_and_process_request (daig : Daig.t) : bool =
+  let request = Stdlib.read_line () in
   match request with 
-  | "exit" -> false
-  | _ -> process_location_request daig request; true
+  | "q" -> false
+  | _   -> process_request daig request; true
 
 
 (* ============================== REPL *)
 
 let run_repl_iter (daig : Daig.t) : bool =
   print_string "> ";
-  Stdlib.read_line ()
-  |> process_request daig
+  read_and_process_request daig
 
 let rec run_repl (daig : Daig.t) : unit =
   if run_repl_iter daig
