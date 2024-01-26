@@ -30,6 +30,20 @@ Build with `make build`.
 **Note.** Compared to the forked repo, in file `src/frontend/dune`,
 the library `tree_sitter_java` is replaced with `tree-sitter-lang.java`.
 
+## Building callgraphs
+- `git submodule init && git submodule update`
+- `cd WALA-callgraph`
+- Ensure you have Java 8 or 11 installed, with gradle 7.6
+- `git apply ../build.gradle.patch`
+- `./gradlew compileJava`
+
+From `usertest`: `javac ArrayFun.java`, `jar cfe ArrayFun.jar ArrayFun ArrayFun.class`,
+(make sure the resulting jar is good by `java -jar ArrayFun.jar`
+which should fail with array out of bounds).
+
+From WALA-callgraph: 
+`./run.py ../usertest/ArrayFun.callgraph ../usertest/ArrayFun.jar`
+
 ## Experiment with DAI
 
 A few simple examples are in [`usertest`](usertest/): file 
