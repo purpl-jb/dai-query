@@ -70,7 +70,10 @@ let%test "User test: simple for-loop with intervals" =
 let%test "User test: simple static arrays with array bounds" =
   TestArrBounds.test_simple "ArrayFun"
   
-let%test "User test: interprocedural array bounds" =
+let%test "User test: interprocedural with intervals" =
+  TestArrBounds.test_interprocedural "SimpleFuns"
+
+let%test "User test: interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
 
 (* JB: I can't figure out where to get a callgraph.

@@ -1,0 +1,6 @@
+CALLER: static SimpleFuns#main(java.lang.String[])
+	CALLEE: static SimpleFuns#sum(int,int)
+	CALLEE: static SimpleFuns#add1(int)
+	CALLEE: static SimpleFuns#useadd1(int)
+CALLER: static SimpleFuns#useadd1(int)
+	CALLEE: static SimpleFuns#add1(int)
