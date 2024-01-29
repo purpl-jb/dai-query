@@ -82,11 +82,16 @@ Analyzed graphs are stored in `.dot` files.
 
 File [`src/semqrunner.ml`](src/semqrunner.ml)
 provides a simple command-line interface for
-exploring DAIG abstract states (see the script for more info).
+exploring DAIG abstract states (see the script for more info)
+for interval domain.
 
 Run
 `_build/default/src/semqrunner.exe _build/default/usertest/Sum.java`
 as an example.
+- if there is a callgraph file with the same name,
+  `_build/default/usertest/Sum.callgraph`,
+  an inter-procedural analysis is performed using a DSG;
+- otherwise, only an intra-procedural analysis is performed.
 
 ## Graph exploration
 
@@ -95,3 +100,9 @@ as an example.
 Locations originating from the control-flow graph are denoted with `l<number>`.
 They can be visually identified in `.ps` files as `l<number>: <abstract state>`
 in green-bordered rectangles.
+
+Programmatically, locations have the type `Syntax.Cfg.Loc.t`.
+
+A location with a given integer index can be obtained with
+`Syntax.Cfg.Loc.of_int_unsafe`.
+
