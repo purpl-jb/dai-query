@@ -64,6 +64,9 @@ module TestArrBounds = Test (Domain.Array_bounds)
 let%test "User test: simple sum and if with intervals" =
   TestInt.test_simple "Sum"
 
+	let%test "User test: test matrix multiplication code" =
+		TestInt.test_simple "MatMul"
+
 let%test "User test: simple for-loop with intervals" =
   TestInt.test_simple "ForLoop"
   
