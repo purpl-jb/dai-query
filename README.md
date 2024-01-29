@@ -106,4 +106,10 @@ Programmatically, locations have the type `Syntax.Cfg.Loc.t`.
 A location with a given integer index can be obtained with
 `Syntax.Cfg.Loc.of_int_unsafe`.
 
-To access an abstract state at a given location, use `Analysis.Daig.read_by_loc`.
+### Abstract state
+
+To access abstract state at a given location, use `Analysis.Daig.read_by_loc`;
+if the state isn't computed, returns `None`.
+
+To request abstract state (and compute if not yet),
+use `Analysis.Daig.get_by_loc`.
