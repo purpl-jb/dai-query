@@ -51,9 +51,9 @@ jar = java_to_ext(main_class, "jar")
 
 logging.info("Building %s with %s", jar, classes)
 
-# compose tar command to switch to main classes' directory
-# and then add the class files
-# simply passing paths to jar causes jar to embed the directory structure of path in the jar file
+# compose jar command to switch to main classes' directory
+# and then add the class files;
+# simply passing paths to jar causes jar to embed the directory structure of path in the jar file, e.g.:
 # jar usertest/HelloWorld.class will embed the directory usertest in the jar file
 
 command = ["jar", "cf", jar]

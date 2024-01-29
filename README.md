@@ -1,8 +1,13 @@
 # Demanded Abstract Interpretation with Queries
 
-## Build
+Original project:
+_incremental_ and _demand-driven_ abstract interpretation framework in OCaml
 
-_Incremental_ and _demand-driven_ abstract interpretation framework in OCaml
+Current project:
+semantic queries over demanded abstract interpretation graphs
+
+
+## Build
 
 DAI requires:
  * OCaml version 4.09.0+ (definitely works with 4.13.1)
@@ -11,7 +16,11 @@ DAI requires:
  * System packages: libgmp-dev libmpfr-dev (for APRON numerical domains)
  * [Adapton](https://github.com/plum-umd/adapton.ocaml) version 0.1-dev (pinned as a local OPAM package via `make install`, per its README)
  * **[UPD]** Tree sitter for Java (see instructions below)
- * **[UPD]** Graphviz (for processing `.dot` files)
+
+ Additionally, the project requires:
+ * Graphviz (for processing `.dot` files)
+ * python3 (for building callgraphs with WALA)
+ * Java 8 or 11 (for building callgraphs with WALA)
 
 Build with `make build`.
 
@@ -30,19 +39,31 @@ Build with `make build`.
 **Note.** Compared to the forked repo, in file `src/frontend/dune`,
 the library `tree_sitter_java` is replaced with `tree-sitter-lang.java`.
 
-## Building callgraphs
+
+## Building callgraphs for interprocedural analyses
+
 - `git submodule init && git submodule update`
 - `cd WALA-callgraph`
 - Ensure you have Java 8 or 11 installed, with gradle 7.6
-- `git apply ../build.gradle.patch`
 - `./gradlew compileJava`
 
-From `usertest`: `javac ArrayFun.java`, `jar cfe ArrayFun.jar ArrayFun ArrayFun.class`,
-(make sure the resulting jar is good by `java -jar ArrayFun.jar`
-which should fail with array out of bounds).
+To easily build a callgraph, use the script
+[`build-callgraph.py`](build-callgraph.py) (requires python3):
 
-From WALA-callgraph: 
-`./run.py ../usertest/ArrayFun.callgraph ../usertest/ArrayFun.jar`
+```
+./build-callgraph.py usertest/ArrayFun.java
+```
+
+To build a callgraph manually:
+
+- From `usertest`: 
+  + `javac ArrayFun.java`
+  + `jar cfe ArrayFun.jar ArrayFun ArrayFun.class`
+    (make sure the resulting jar is good by `java -jar ArrayFun.jar`
+    which should fail with array out of bounds).
+- From WALA-callgraph: 
+  `./run.py ../usertest/ArrayFun.callgraph ../usertest/ArrayFun.jar`
+
 
 ## Experiment with DAI
 
@@ -55,6 +76,7 @@ Analyzed graphs are stored in `.dot` files.
   and converts analyzed graphs to a visual representation in `.ps` files
   using Graphviz.
 - The resulting graphs can be found in `_build/default/`.
+
 
 ## Semantic Querying
 
@@ -73,5 +95,3 @@ as an example.
 Locations originating from the control-flow graph are denoted with `l<number>`.
 They can be visually identified in `.ps` files as `l<number>: <abstract state>`
 in green-bordered rectangles.
-
-
