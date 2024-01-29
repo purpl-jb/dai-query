@@ -1,10 +1,10 @@
 open Dai.Import
 
 module Test (Dom : Domain.Abstract.Dom) = struct
-	module Daig = Analysis.Daig.Make (Dom)
-	module Dsg = Analysis.Dsg.Make (Dom)
-  module SemqrDaig = Semquery.Processor.MakeForDaig (Dom) (Daig)
-  module Printer = Semquery.Printer.Make (Dom)
+  module SemqrProc = Semquery.Processor.Make(Dom)
+  module Printer = Semquery.Printer.Make(Dom)
+  module Daig = SemqrProc.Daig
+	module Dsg = SemqrProc.Dsg
 	
 	let dname = "usertest/"
 
@@ -28,7 +28,7 @@ module Test (Dom : Domain.Abstract.Dom) = struct
           ;
           (* reads and prints the abstrate state at the function exit *)
           Printer.println_option_absst @@
-            SemqrDaig.read_absst_by_loc fn.exit analyzed_daig
+            SemqrProc.read_absst_by_loc fn.exit analyzed_daig
        );
 		true
 		
@@ -69,8 +69,13 @@ let%test "User test: simple for-loop with intervals" =
   
 let%test "User test: simple static arrays with array bounds" =
   TestArrBounds.test_simple "ArrayFun"
-  
-let%test "User test: interprocedural with intervals" =
+
+let%test "User test: one-call interprocedural with intervals" =
+  TestArrBounds.test_interprocedural "FunCall"  
+
+(* JB: for some reason, interprocedural does not work with intervals
+    on this file (haven't tried other files) *)
+let%test "User test: simple interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "SimpleFuns"
 
 let%test "User test: interprocedural with array bounds" =

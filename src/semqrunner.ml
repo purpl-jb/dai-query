@@ -2,10 +2,9 @@ open Core
 open Syntax
 
 module Dom = Domain.Itv 
-(* Itv Array_bounds *)
 
-module Daig = Analysis.Daig.Make(Dom)
-module SemqrDaig = Semquery.Processor.MakeForDaig(Dom)(Daig)
+module SemqrProc = Semquery.Processor.Make(Dom)
+module Daig = SemqrProc.Daig
 module Printer = Semquery.Printer.Make(Dom)
 
 (*
@@ -59,7 +58,7 @@ let process_location_request_impl
   (daig : Daig.t) ?formula (locstr : string) : unit 
 =
   let loc = int_of_string locstr in
-  let oabsst = SemqrDaig.read_absst_by_intloc_unsafe loc daig in
+  let oabsst = SemqrProc.read_absst_by_intloc_unsafe loc daig in
   match formula with
   | None -> Printer.println_option_absst oabsst
   | Some formula -> 
@@ -107,13 +106,33 @@ let rec run_repl (daig : Daig.t) : unit =
 
 (* ============================== Main program *)
 
+
+let mk_cg_fname (fname : string) =
+  let noext = Stdlib.Filename.remove_extension fname in
+  noext ^ ".callgraph"
+
 let mk_dotps_fnames (fname : string) =
   let noext = Stdlib.Filename.remove_extension fname in
   (noext ^ ".dot", noext ^ ".ps")
 
-let load_daig (fname : string) : Daig.t =
+(** Loads either a regular or an interprocedural daig for the main function
+    depending on the existence of the matching .callgraph file.
+    ASSUMES: fname exists *)
+let load_daig_info (fname : string) : SemqrProc.daig_info =
+  let cg_fname = mk_cg_fname fname in
+  match Sys.file_exists cg_fname with
+  | `No -> ( print_string " [no .callgraph file: simple daig] ";
+      SemqrProc.load_main_cfg_daig fname
+    )
+  | `Unknown -> failwith @@ "Couldn't access " ^ fname
+  | `Yes -> ( print_string " [.callgraph file found: using inter-procedural dsg] ";
+      let (fn, cfg, daig, _dsg) = SemqrProc.load_main_cfg_daig_dsg fname cg_fname in
+      (fn, cfg, daig)
+    )
+
+let load_and_dump_daig (fname : string) : Daig.t =
   print_string @@ "Loading main DAIG... ";
-  let (fn, _cfg, daig) = SemqrDaig.load_main_cfg_daig fname in 
+  let (fn, _cfg, daig) = load_daig_info fname in 
   print_endline @@ Format.sprintf "loaded: entry %s, exit %s" 
     (Cfg.Loc.to_string fn.entry) (Cfg.Loc.to_string fn.exit);
   let (dotname, psname) = mk_dotps_fnames fname in
@@ -126,9 +145,14 @@ let load_daig (fname : string) : Daig.t =
 
 let main fname = 
   print_endline @@ "Processing " ^ fname;
-  let daig = load_daig fname in
-  print_endline @@ "Starting REPL: enter location number or exit";
-  run_repl daig;
+  match Sys.file_exists fname with
+  | `No -> failwith @@ "File " ^ fname ^ " does not exist"
+  | `Unknown -> failwith @@ "Couldn't access " ^ fname
+  | `Yes -> (
+    let daig = load_and_dump_daig fname in
+    print_endline @@ "Starting REPL: enter location number or exit";
+    run_repl daig
+  );
   print_endline "Exiting"
 
 (* ============================== Dealing with command-line arguments *)
