@@ -71,10 +71,11 @@ let%test "User test: simple static arrays with array bounds" =
   TestArrBounds.test_simple "ArrayFun"
 
 let%test "User test: one-call interprocedural with intervals" =
-  TestArrBounds.test_interprocedural "FunCall"  
+  TestInt.test_interprocedural "FunCall"  
 
 (* JB: for some reason, interprocedural does not work with intervals
-    on this file (haven't tried other files) *)
+    on this file: apparently, due to System.out.println in the file.
+    But I don't understand why it does work with Array_bounds domain *)
 let%test "User test: simple interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "SimpleFuns"
 
