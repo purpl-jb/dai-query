@@ -60,6 +60,7 @@ end
 
 module TestInt = Test (Domain.Itv)
 module TestArrBounds = Test (Domain.Array_bounds)
+module TestOct = Test (Domain.Octagon)
 
 let%test "User test: simple sum and if with intervals" =
   TestInt.test_simple "Sum"
@@ -72,6 +73,9 @@ let%test "User test: simple static arrays with array bounds" =
 
 let%test "User test: one-call interprocedural with intervals" =
   TestInt.test_interprocedural "FunCall"  
+
+let%test "User test: one-call interprocedural with intervals TODO" =
+  TestOct.test_simple "SumInLoop"  
 
 (* JB: for some reason, interprocedural does not work with intervals
     on this file: apparently, due to System.out.println in the file.
