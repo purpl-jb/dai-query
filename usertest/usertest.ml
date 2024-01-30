@@ -8,15 +8,16 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 	
 	let dname = "usertest/"
 
+  let entry_state = Dom.init ()
+
   (* JB: this code is mostly copied from src/analysis/daig.ml *)
-  (* TODO: abs_of_rel_path doesn't seem to be needed? *)
 	let test_simple fname = 
 		let ({ cfgs; _ } : Frontend.Cfg_parser.prgm_parse_result) =
 		  Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
 		in
 		Map.to_alist cfgs
 		|> List.iter ~f:(fun (fn, cfg) ->
-          let daig = Daig.of_cfg ~entry_state:(Dom.init ()) ~cfg ~fn in
+          let daig = Daig.of_cfg ~entry_state ~cfg ~fn in
           let fname_ = fname ^ "_" in
           Daig.dump_dot ~filename:(abs_of_rel_path (fname_ ^ fn.method_id.method_name ^ ".dot")) daig;
           (* prints the location of the function exit *)
@@ -39,15 +40,13 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		in
 		let dsg : Dsg.t = Dsg.init ~cfgs in
 		let fns = Syntax.Cfg.Fn.Map.keys dsg in
-		let main_fn =
-		  List.find_exn fns ~f:(fun (fn : Syntax.Cfg.Fn.t) -> String.equal "main" fn.method_id.method_name)
-		in
-		let _, dsg = Dsg.materialize_daig ~fn:main_fn ~entry_state:(Dom.init ()) dsg in
+		let main_fn = List.find_exn fns ~f:Syntax.Cfg.Fn.is_main_fn in
+		let _, dsg = Dsg.materialize_daig ~fn:main_fn ~entry_state dsg in
 		let cg =
 		  Frontend.Callgraph.deserialize ~fns (Frontend.Src_file.of_file @@ abs_of_rel_path (dname ^ fname ^ ".callgraph"))
 		in
 		let _exit_state, dsg =
-		  Dsg.query ~fn:main_fn ~entry_state:(Dom.init ()) ~loc:main_fn.exit ~cg ~fields dsg
+		  Dsg.query ~fn:main_fn ~entry_state ~loc:main_fn.exit ~cg ~fields dsg
 		in
     let _, main_daig = SemqrProc.get_cfg_daig_from_dsg main_fn (Dom.init ()) dsg in
     print_endline @@ Format.asprintf "%s.%s exit loc: %a" fname main_fn.method_id.method_name Syntax.Cfg.Loc.pp main_fn.exit;

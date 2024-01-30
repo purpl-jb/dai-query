@@ -77,6 +77,15 @@ Analyzed graphs are stored in `.dot` files.
   using Graphviz.
 - The resulting graphs can be found in `_build/default/`.
 
+### Notes on DAI's features
+
+It seems dynamic arrays aren't supported in any capacity (searching 
+`Expr.Array_create` shows that neither domains implements this construct),
+so it's impossible to write any meaningful array-processing code, unfortunately.
+
+**TODO:** how did the tool use to verify Bucket.js functions? They seem to be
+manipulating arrays...
+
 
 ## Semantic Querying
 
