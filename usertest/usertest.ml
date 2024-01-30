@@ -64,6 +64,7 @@ end
 module TestInt = Test (Domain.Itv)
 module TestArrBounds = Test (Domain.Array_bounds)
 module TestOct = Test (Domain.Octagon)
+module TestNull = Test (Domain.Null_dom)
 
 let%test "User test: simple sum and if with intervals" =
   TestInt.test_simple "Sum"
@@ -83,6 +84,9 @@ let%test "User test: simple double matrix with array bounds" =
 let%test "User test: simple asssignment with octagon" =
   TestOct.test_simple "SumInLoop"  
 
+let%test "User test: interprocedural empty class with null" =
+  TestNull.test_interprocedural "NullTriv"  
+
 let%test "User test: one-call interprocedural with intervals" =
   TestInt.test_interprocedural "FunCall"  
 
@@ -91,7 +95,7 @@ let%test "User test: one-call interprocedural with intervals" =
   function calls *)
 let%test "User test: simple interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "SimpleFuns"
-
+  
 let%test "User test: interprocedural static arrays with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
 
