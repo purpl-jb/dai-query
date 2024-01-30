@@ -83,8 +83,11 @@ It seems dynamic arrays aren't supported in any capacity (searching
 `Expr.Array_create` shows that neither domains implements this construct),
 so it's impossible to write any meaningful array-processing code, unfortunately.
 
-**TODO:** how did the tool use to verify Bucket.js functions? They seem to be
-manipulating arrays...
+Ouch, DAI's **array-related analysis is unsound**!
+For an array inside a function, manipulating the array element removes 
+it from the state. Then, the effect of the function is not reflected
+in the memory state inside the main function.
+See `usertest/ArraySwap.java` for an example.
 
 
 ## Semantic Querying

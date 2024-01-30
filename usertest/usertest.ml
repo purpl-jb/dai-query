@@ -95,5 +95,11 @@ let%test "User test: simple interprocedural with array bounds" =
 let%test "User test: interprocedural static arrays with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
 
+let%test "User test: interprocedural array-contains with array bounds" =
+  TestArrBounds.test_interprocedural "ArrayContains"
+
+let%test "User test: interprocedural array-swap with array bounds" =
+  TestArrBounds.test_interprocedural "ArraySwap"
+
 let%test "User test: interprocedural double matrix with array bounds" =
   TestArrBounds.test_interprocedural "DoubleMatrixFun"

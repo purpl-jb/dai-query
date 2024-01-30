@@ -1,0 +1,6 @@
+CALLER: static ArrayContains#main(java.lang.String[])
+	CALLEE: static ArrayContains#get1(int[])
+	CALLEE: static ArrayContains#indexOf(int[],int)
+	CALLEE: static ArrayContains#contains(int[],int)
+CALLER: static ArrayContains#contains(int[],int)
+	CALLEE: static ArrayContains#indexOf(int[],int)
