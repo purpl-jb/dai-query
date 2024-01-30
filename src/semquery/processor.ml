@@ -44,6 +44,16 @@ module Make (Dom : Abstract.Dom) = struct
     | [] -> raise (SemQueryError "No main daig")
     | _  -> raise (SemQueryError "Multiple main daigs")
 
+  (** Extracts a daig for [fn] and [entry_state] from [dsg].
+      THROWS *)
+  let get_cfg_daig_from_dsg (fn : Cfg.Fn.t) (entry_state : Dom.t) 
+    (dsg : Dsg.t) : Cfg.t * Daig.t 
+  =
+    let cfg, daigs = Map.find_exn dsg fn in
+    match Map.find daigs entry_state with
+    | Some daig -> (cfg, daig)
+    | None -> raise (SemQueryError "No daig for the given function and entry state")
+
   (** Loads a DAIG for the main function in [fname],
       performing inter-procedural analysis using a callgraph in [cg_fname].
       ASSUMES: [fname] and [cg_fname] exist.
@@ -61,10 +71,8 @@ module Make (Dom : Abstract.Dom) = struct
     let _, dsg =
 		  Dsg.query ~fn:main_fn ~entry_state ~loc:main_fn.exit ~cg ~fields dsg
 		in 
-    let main_cfg, main_daigs = Map.find_exn dsg main_fn in
-    match Map.find main_daigs entry_state with
-    | Some main_daig -> (main_fn, main_cfg, main_daig, dsg)
-    | None -> raise (SemQueryError "No main daig")
+    let main_cfg, main_daig = get_cfg_daig_from_dsg main_fn entry_state dsg in
+    (main_fn, main_cfg, main_daig, dsg)
 
   (** Returns abstract state at [loc] of [daig].
       THROWS: If [loc] doesn't exist, throws an exception. *)

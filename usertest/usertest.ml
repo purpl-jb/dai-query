@@ -49,6 +49,10 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		let _exit_state, dsg =
 		  Dsg.query ~fn:main_fn ~entry_state:(Dom.init ()) ~loc:main_fn.exit ~cg ~fields dsg
 		in
+    let _, main_daig = SemqrProc.get_cfg_daig_from_dsg main_fn (Dom.init ()) dsg in
+    print_endline @@ Format.asprintf "%s.%s exit loc: %a" fname main_fn.method_id.method_name Syntax.Cfg.Loc.pp main_fn.exit;
+    Printer.println_option_absst @@
+            SemqrProc.read_absst_by_loc main_fn.exit main_daig;
 		let _ = Dsg.dump_dot ~filename:(abs_of_rel_path ("solved_" ^ fname ^ ".dsg.dot")) dsg in
 		true
 end
@@ -71,40 +75,26 @@ let%test "User test: simple for-loop with intervals" =
 let%test "User test: simple static arrays with array bounds" =
   TestArrBounds.test_simple "ArrayFun"
 
+let%test "User test: double arrays with array bounds" =
+  TestArrBounds.test_simple "Double"
+
+let%test "User test: simple double matrix with array bounds" =
+  TestArrBounds.test_simple "DoubleMatrixFun"
+
+let%test "User test: simple asssignment with octagon" =
+  TestOct.test_simple "SumInLoop"  
+
 let%test "User test: one-call interprocedural with intervals" =
   TestInt.test_interprocedural "FunCall"  
 
-let%test "User test: one-call interprocedural with intervals TODO" =
-  TestOct.test_simple "SumInLoop"  
-
-(* JB: for some reason, interprocedural does not work with intervals
-    on this file: apparently, due to System.out.println in the file.
-    But I don't understand why it does work with Array_bounds domain *)
+(* JB: interprocedural does not work with intervals on this file:
+  apparently, due to System.out.println, because intervals didn't implement
+  function calls *)
 let%test "User test: simple interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "SimpleFuns"
 
-let%test "User test: interprocedural with array bounds" =
+let%test "User test: interprocedural static arrays with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
 
-(* JB: I can't figure out where to get a callgraph.
-It seems that tests in src/analysis/dsg.ml rely on existing .callgraph files. *)
-(*
-let%test "User test: interprocedural" =
-  let ({ cfgs; fields; _ } : Frontend.Cfg_parser.prgm_parse_result) =
-    Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path ("jbtest/" ^ fname ^ ".java"))
-  in
-  let dsg (*: t*) = Dsg.init ~cfgs in
-  let fns = Syntax.Cfg.Fn.Map.keys dsg in
-  let main_fn =
-    List.find_exn fns ~f:(fun (fn : Syntax.Cfg.Fn.t) -> String.equal "main" fn.method_id.method_name)
-  in
-  let _, dsg = Dsg.materialize_daig ~fn:main_fn ~entry_state:(Dom.init ()) dsg in
-  let cg =
-    Frontend.Callgraph.deserialize ~fns (Frontend.Src_file.of_file @@ abs_of_rel_path (dname ^ fname ^ ".callgraph"))
-  in
-  let _exit_state, dsg =
-    Dsg.query ~fn:main_fn ~entry_state:(Dom.init ()) ~loc:main_fn.exit ~cg ~fields dsg
-  in
-  let _ = Dsg.dump_dot ~filename:(abs_of_rel_path ("solved_" ^ fname ^ ".dsg.dot")) dsg in
-  true
-*)
+let%test "User test: interprocedural double matrix with array bounds" =
+  TestArrBounds.test_interprocedural "DoubleMatrixFun"
