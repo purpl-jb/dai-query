@@ -19,7 +19,7 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		|> List.iter ~f:(fun (fn, cfg) ->
           let daig = Daig.of_cfg ~entry_state ~cfg ~fn in
           let fname_ = fname ^ "_" in
-          Daig.dump_dot ~filename:(abs_of_rel_path (fname_ ^ fn.method_id.method_name ^ ".dot")) daig;
+          Daig.dump_dot ~filename:(abs_of_rel_path ("initial_" ^ fname_ ^ fn.method_id.method_name ^ ".dot")) daig;
           (* prints the location of the function exit *)
           print_endline @@ Format.asprintf "%s.%s exit loc: %a" fname fn.method_id.method_name Syntax.Cfg.Loc.pp fn.exit;
           let _, analyzed_daig = Daig.get_by_loc fn.exit daig in
@@ -42,6 +42,7 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		let fns = Syntax.Cfg.Fn.Map.keys dsg in
 		let main_fn = List.find_exn fns ~f:Syntax.Cfg.Fn.is_main_fn in
 		let _, dsg = Dsg.materialize_daig ~fn:main_fn ~entry_state dsg in
+    let _ = Dsg.dump_dot ~filename:(abs_of_rel_path ("initial_" ^ fname ^ ".dsg.dot")) dsg in
 		let cg =
 		  Frontend.Callgraph.deserialize ~fns (Frontend.Src_file.of_file @@ abs_of_rel_path (dname ^ fname ^ ".callgraph"))
 		in

@@ -6,7 +6,11 @@ dune build
 DAI_ROOT="../" dune runtest usertest/ --force
 
 dir="_build/default"
+
 set -o xtrace # to print out commands
+for fname in $dir/initial_*.dot; do
+		dot -Tps $fname -o "${fname%.dot}.ps"
+done
 for fname in $dir/analyzed_*.dot; do
 		dot -Tps $fname -o "${fname%.dot}.ps"
 done

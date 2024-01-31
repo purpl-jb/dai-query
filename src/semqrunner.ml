@@ -1,7 +1,8 @@
 open Core
 open Syntax
 
-module Dom = Domain.Itv 
+module Dom = Domain.Octagon 
+(* Domain.Itv Domain.Octagon *)
 
 module SemqrProc = Semquery.Processor.Make(Dom)
 module Daig = SemqrProc.Daig
@@ -17,8 +18,9 @@ The REPL processes the following commands:
 - q: quit
 - p <intloc>: prints out the abstract state at the DAIG location
   represented by <intloc>
-- c <intloc> <formula>: checks <formula> at the DAIG location <intloc>
-  where <formula> is <var>=<int>;
+- e <intloc> <formula>: eval <formula> at the DAIG location <intloc>
+  where <formula> is <prim>, <prim>=<prim>, <prim><<prim>,
+  with <prim> being <var> or <int>;
   [0,0] means false, [1,1] means true, [0,1] means maybe
 
 Note: the interval analysis domain is hard-coded as [Dom] above.
@@ -37,16 +39,20 @@ let println_error errstr =
   r = Ast.Expr.Lit (Ast.Lit.Int 2L);
 } *)
 
-(* formula has to be of the form <var>=<int> *)
 let parse_formula (formula : string) : Ast.Expr.t option =
-  let parts = Stdlib.String.split_on_char '=' formula in
+  try 
+    let formula_ast = Semquery.Parser.parse_formula formula in
+    Some formula_ast
+  with
+  | Semquery.Parser.SemQueryParserError _ -> None
+  (* let parts = Stdlib.String.split_on_char '=' formula in
   match parts with
   | [var; intval] -> Some (Ast.Expr.Binop { 
       l = Ast.Expr.Var var;
       op = Ast.Binop.Eq; 
       r = Ast.Expr.Lit (Ast.Lit.Int (Int64.of_string intval));
     })
-  | _ -> None
+  | _ -> None *)
 
 let eval_formula (absst : Dom.t) (formula : Ast.Expr.t) : Apron.Interval.t option =
   let otexpr = Dom.texpr_of_expr absst formula in
@@ -69,7 +75,7 @@ let process_location_request_impl
           match oitv with
           | None -> println_error "could not parse or eval the formula"
           | Some itv -> print_endline @@
-              Format.asprintf "%a" Dom.pp_interval itv
+              Format.asprintf "%a" Domain.Itv.pp_interval itv
 
 let process_location_request (daig : Daig.t) ?formula (locstr : string) : unit =
   try process_location_request_impl daig ?formula locstr with 
@@ -82,7 +88,7 @@ let process_request (daig : Daig.t) (request : string) : unit =
   let req_list = Stdlib.String.split_on_char ' ' request in
   match req_list with 
   | ["p"; loc] -> process_location_request daig loc
-  | ["c"; loc; formula] -> process_location_request daig loc ~formula
+  | ["e"; loc; formula] -> process_location_request daig loc ~formula
   | _ -> println_error "unknown command"
 
 let read_and_process_request (daig : Daig.t) : bool =
