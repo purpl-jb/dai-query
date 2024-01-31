@@ -286,7 +286,9 @@ let extend_env_by_uses stmt oct =
     if Set.is_empty new_uses then oct
     else
       new_uses |> Set.to_array |> Array.map ~f:Var.of_string |> Environment.add env [||]
-      |> fun new_env -> change_environment man oct new_env true
+      |> fun new_env -> change_environment man oct new_env false (* true *)
+      (* JB: I changed true to false here to avoid initializing unknown variables with 0;
+         not sure if it breaks anything *)
 
 let interpret stmt oct =
   let open Ast.Stmt in
@@ -311,6 +313,7 @@ let interpret stmt oct =
         | Some rhs_texpr ->
             Abstract1.assign_texpr man oct_new_env lhs (Texpr1.of_expr new_env rhs_texpr) None
         | None ->
+            print_endline @@ "(JB) SUSPICIOUS assignment to var " ^ (Var.to_string lhs);
             if Environment.mem_var env lhs then
               (* lhs was constrained, quantify that out *)
               Abstract1.forget_array man oct [| lhs |] false

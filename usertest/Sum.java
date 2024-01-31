@@ -14,5 +14,7 @@ class Sum {
           c = a - b;
         }
         int d = c*c;
+        int e = boo; // unknown variable should be treated as anything
+        boolean test3 = e < 10;
     }
 }
