@@ -65,6 +65,7 @@ end
 module TestInt = Test (Domain.Itv)
 module TestArrBounds = Test (Domain.Array_bounds)
 module TestOct = Test (Domain.Octagon)
+module TestOctArrBounds = Test (Domain.Oct_array_bounds)
 module TestNull = Test (Domain.Null_dom)
 
 let%test "User test: simple sum and if with intervals" =
@@ -108,3 +109,7 @@ let%test "User test: interprocedural array-swap with array bounds" =
 
 let%test "User test: interprocedural double matrix with array bounds" =
   TestArrBounds.test_interprocedural "DoubleMatrixFun"
+
+(* TODO: is this any better with octagons? array access removes info *)
+let%test "User test: interprocedural loop with octagon array bounds" =
+  TestArrBounds.test_interprocedural "SumCallInLoop"
