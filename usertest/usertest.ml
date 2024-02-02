@@ -33,10 +33,11 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		true
 		
 	(* JB: this code is mostly copied from src/analysis/dsg.ml *)
-	let test_interprocedural fname = 
+	let test_interprocedural_files files = 
 		let ({ cfgs; fields; _ } : Frontend.Cfg_parser.prgm_parse_result) =
-		  Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
+		  Frontend.Cfg_parser.parse_files_exn ~files:(List.map ~f:(fun name -> (abs_of_rel_path (dname ^ name ^ ".java"))) files)
 		in
+    let fname = (List.hd_exn files) in
 		let dsg : Dsg.t = Dsg.init ~cfgs in
 		let fns = Syntax.Cfg.Fn.Map.keys dsg in
 		let main_fn =
@@ -51,6 +52,9 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		in
 		let _ = Dsg.dump_dot ~filename:(abs_of_rel_path ("solved_" ^ fname ^ ".dsg.dot")) dsg in
 		true
+
+    let test_interprocedural fname =
+      test_interprocedural_files [fname]
 end
 
 (* Domain modules we've tried:
@@ -75,6 +79,9 @@ let%test "User test: interprocedural with intervals" =
 
 let%test "User test: interprocedural with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
+
+let%test "User test: interprocedural with multiple files" =
+  TestArrBounds.test_interprocedural_files ["MultiFile"; "SimpleFuns"]
 
 (* JB: I can't figure out where to get a callgraph.
 It seems that tests in src/analysis/dsg.ml rely on existing .callgraph files. *)
