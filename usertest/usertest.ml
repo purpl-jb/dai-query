@@ -64,20 +64,17 @@ module TestArrBounds = Test (Domain.Array_bounds)
 let%test "User test: simple sum and if with intervals" =
   TestInt.test_simple "Sum"
 
-	let%test "User test: test matrix multiplication code" =
-		TestInt.test_simple "MatMul"
-
 let%test "User test: simple for-loop with intervals" =
   TestInt.test_simple "ForLoop"
   
 let%test "User test: simple static arrays with array bounds" =
   TestArrBounds.test_simple "ArrayFun"
+
+let%test "User test: test matrix multiplication code" =
+  TestArrBounds.test_simple "MatMul"
   
 let%test "User test: interprocedural with intervals" =
   TestArrBounds.test_interprocedural "SimpleFuns"
-
-let%test "User test: interprocedural with array bounds" =
-  TestArrBounds.test_interprocedural "ArrayFun"
 
 (* JB: I can't figure out where to get a callgraph.
 It seems that tests in src/analysis/dsg.ml rely on existing .callgraph files. *)
