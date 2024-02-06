@@ -308,13 +308,13 @@ let interpret stmt phi =
 
 let array_accesses : Stmt.t -> (Expr.t * Expr.t) list =
   let rec expr_derefs = function
-    | Expr.Deref { rcvr = _; field = _ } -> failwith "todo"
+    | Expr.Deref { rcvr = _; field = _ } -> failwith "todo deref"
     | Expr.Lit _ | Expr.Var _ -> []
     | Expr.Binop { l; op = _; r } -> expr_derefs l @ expr_derefs r
     | Expr.Unop { op = _; e } -> expr_derefs e
     | Expr.Array_literal { elts; alloc_site = _ } -> List.bind elts ~f:expr_derefs
     | Expr.Array_access _ | Expr.Array_create _ | Expr.Method_ref _ | Expr.Class_lit _ ->
-        failwith "todo"
+        failwith "todo class_lit"
   in
   function
   | Assign { lhs = _; rhs } -> expr_derefs rhs
@@ -323,7 +323,7 @@ let array_accesses : Stmt.t -> (Expr.t * Expr.t) list =
   | Expr e | Assume e -> expr_derefs e
   | Call { actuals; _ } -> List.bind actuals ~f:expr_derefs
   | Skip -> []
-  | Array_write _ | Exceptional_call _ -> failwith "todo"
+  | Array_write _ | Exceptional_call _ -> failwith "todo arr or exc call"
 
 (** Some(true/false) indicates [idx] is definitely in/out-side of [addr]'s bounds;
     None indicates it could be either
