@@ -225,6 +225,7 @@ let interpret stmt phi =
         let itv = Abstract1.change_environment man itv env false in
         Abstract1.meet man itv @@ Abstract1.of_box man env vs itvs )
   | Assign { lhs; rhs } -> (
+      (* print_endline @@ Format.asprintf "%a" Expr.pp rhs; *)
       let lhs = Var.of_string lhs in
       match texpr_of_expr (am, itv) rhs with
       | Some texpr -> (am, Itv.assign itv lhs texpr)
@@ -596,6 +597,7 @@ let is_setter meth =
 
 let approximate_missing_callee ~caller_state ~callsite =
   (* as described in [interpret] above, forget used tmp vars after they are used *)
+  (* print_endline @@ Format.asprintf "%a" Ast.Stmt.pp callsite; *)
   forget_used_tmp_vars callsite
   @@
   match callsite with
@@ -620,6 +622,11 @@ let approximate_missing_callee ~caller_state ~callsite =
       (* we (unsoundly) assume that any call `o.setFoo(x)` method is equivalent to `o.foo = x` *)
       let field = String.uncapitalize (String.chop_prefix_exn meth ~prefix:"set") in
       interpret Ast.(Stmt.Write { rcvr; field; rhs }) caller_state
+    (* __nondet() means a value in some hard-coded range *)
+  | Ast.Stmt.Call { lhs = Some lhs; rcvr = _; meth = "__nondet"; actuals = []; alloc_site = None } ->
+    let lhs = Var.of_string lhs in 
+    let am, itv = caller_state in
+    (am, Itv.add_constrained_var itv lhs)
   | Ast.Stmt.Call { lhs; rcvr; meth = _; actuals; alloc_site = None } ->
       (* for a call to an unknown function `x = o.foo(y1,y2,,...)`, we forget any constraints on:
          (1) fields of rcvr o

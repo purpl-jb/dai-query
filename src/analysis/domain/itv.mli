@@ -19,6 +19,9 @@ val filter_env : t -> f:(string -> bool) -> t
 
 val assign : t -> Var.t -> Texpr1.expr -> t
 
+(* JB *)
+val add_constrained_var : t -> Var.t -> t
+
 val weak_assign : t -> Var.t -> Texpr1.expr -> t
 
 val lookup : t -> Var.t -> Interval.t

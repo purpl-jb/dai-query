@@ -5,17 +5,38 @@ class FunCallInIf {
         return x1 + y;
     }
     
+    static int foo(int x, int y) {
+        if (x > 10) {
+            return sum(x, y);
+        } else {
+            return sum(x, -y);
+        }
+    }
+    
+    
+    
     public static void main(String[] args) {
-        int a = 0;
-        int b = 0;
+        // NOTE: for building a callgraph,
+        // __nondet() should be replaced with a literal 
+        
+        int a = __nondet();
+        int b = __nondet();
         int c = 0;
         if (a > 0) {
-            b = a + 5;
-            c = sum(a, b);
+            if (b > 0) {
+                c = foo(a, b);
+            } else {
+                c = foo(-a, b);
+            }
+            b = 5;
         } else {
-            a = -a;
-            b = a + 1;
-            c = sum(a, b);
+            if (b > 0) {
+                c = foo(b, a);
+            } else {
+                c = foo(b, -a);
+            }
+            b = -5;
         }
+        int d = sum(__nondet(), 1);
     }
 }

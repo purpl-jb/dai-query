@@ -93,7 +93,7 @@ let%test "User test: one-call interprocedural with intervals" =
   TestInt.test_interprocedural "FunCall"
 
 let%test "User test: interprocedural+if with intervals" =
-  TestInt.test_interprocedural "FunCallInIf" 
+  TestArrBounds.test_interprocedural "FunCallInIf" 
 
 (* JB: interprocedural does not work with intervals on this file:
   apparently, due to System.out.println, because intervals didn't implement

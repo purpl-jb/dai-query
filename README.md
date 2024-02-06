@@ -95,7 +95,7 @@ See `usertest/ArraySwap.java` for an example.
 File [`src/semqrunner.ml`](src/semqrunner.ml)
 provides a simple command-line interface for
 exploring DAIG abstract states (see the script for more info)
-for interval domain.
+for interval (or octagon) domain.
 
 Run
 `_build/default/src/semqrunner.exe _build/default/usertest/Sum.java`
@@ -125,3 +125,6 @@ if the state isn't computed, returns `None`.
 
 To request abstract state (and compute if not yet),
 use `Analysis.Daig.get_by_loc`.
+
+**Note.** It seems that unconcstrained variables in abstract state
+are not printed out.

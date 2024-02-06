@@ -339,20 +339,43 @@ let lookup itv var =
   if Environment.mem_var (Abstract1.env itv) var then Abstract1.bound_variable man itv var
   else Interval.top
 
+(* JB *)
+let env_add_var_if_new itv var = 
+  let old_env = Abstract1.env itv in
+  Environment.(if mem_var old_env var then old_env else add old_env [||] [| var |])
+
 let assign itv var texpr =
   let man = get_man () in
-  let env =
-    let old_env = Abstract1.env itv in
-    Environment.(if mem_var old_env var then old_env else add old_env [||] [| var |])
+  let env = env_add_var_if_new itv var
+    (* let old_env = Abstract1.env itv in
+    Environment.(if mem_var old_env var then old_env else add old_env [||] [| var |]) *)
   in
   let itv = Abstract1.change_environment man itv env false in
   Abstract1.assign_texpr man itv var Texpr1.(of_expr env texpr) None
 
+(* JB *)
+let mk_var_interval_expr var =
+  let ast_var = Syntax.Ast.Expr.Var (Var.to_string var) in
+  let ast_lit_neg = Syntax.Ast.Expr.Lit (Syntax.Ast.Lit.Int (-123L)) in
+  let ast_lit_pos = Syntax.Ast.Expr.Lit (Syntax.Ast.Lit.Int 123L) in
+  Syntax.Ast.Expr.Binop {
+    l = Binop { l=ast_var; op=Lt; r=ast_lit_pos};
+    op = And;
+    r = Binop { l=ast_var; op=Ge; r=ast_lit_neg};
+  }
+
+(* JB: Adds a variable [var] constrained with a hard-coded interval to [itv] *)
+let add_constrained_var itv var = 
+  let man = get_man () in
+  let env = env_add_var_if_new itv var in
+  let itv = Abstract1.change_environment man itv env false in
+  meet_with_constraint itv (mk_var_interval_expr var)
+
 let weak_assign itv var texpr =
   let man = get_man () in
-  let env =
-    let old_env = Abstract1.env itv in
-    Environment.(if mem_var old_env var then old_env else add old_env [||] [| var |])
+  let env = env_add_var_if_new itv var
+    (* let old_env = Abstract1.env itv in
+    Environment.(if mem_var old_env var then old_env else add old_env [||] [| var |]) *)
   in
   let itv = Abstract1.change_environment man itv env true in
   Abstract1.join man itv (assign itv var texpr)
