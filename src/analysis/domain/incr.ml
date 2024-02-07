@@ -99,7 +99,7 @@ end = struct
     in
     fun stmt -> flip ( >>= ) (fun env -> mfn.mfn_art (stmt, env) |> Art.force)
 
-  let implies _x _y = failwith "todo"
+  let implies _x _y = failwith "todo implies"
 
   let ( <= ) = implies
 

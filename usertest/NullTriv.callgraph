@@ -1,0 +1,3 @@
+CALLER: static NullTriv#main(java.lang.String[])
+	CALLEE: static NullTriv#mkFooNull()
+	CALLEE: static NullTriv#mkFoo()

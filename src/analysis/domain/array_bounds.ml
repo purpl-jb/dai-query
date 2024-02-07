@@ -225,6 +225,7 @@ let interpret stmt phi =
         let itv = Abstract1.change_environment man itv env false in
         Abstract1.meet man itv @@ Abstract1.of_box man env vs itvs )
   | Assign { lhs; rhs } -> (
+      (* print_endline @@ Format.asprintf "%a" Expr.pp rhs; *)
       let lhs = Var.of_string lhs in
       match texpr_of_expr (am, itv) rhs with
       | Some texpr -> (am, Itv.assign itv lhs texpr)
@@ -308,13 +309,13 @@ let interpret stmt phi =
 
 let array_accesses : Stmt.t -> (Expr.t * Expr.t) list =
   let rec expr_derefs = function
-    | Expr.Deref { rcvr = _; field = _ } -> failwith "todo"
+    | Expr.Deref { rcvr = _; field = _ } -> failwith "todo deref"
     | Expr.Lit _ | Expr.Var _ -> []
     | Expr.Binop { l; op = _; r } -> expr_derefs l @ expr_derefs r
     | Expr.Unop { op = _; e } -> expr_derefs e
     | Expr.Array_literal { elts; alloc_site = _ } -> List.bind elts ~f:expr_derefs
     | Expr.Array_access _ | Expr.Array_create _ | Expr.Method_ref _ | Expr.Class_lit _ ->
-        failwith "todo"
+        failwith "todo class_lit"
   in
   function
   | Assign { lhs = _; rhs } -> expr_derefs rhs
@@ -323,7 +324,7 @@ let array_accesses : Stmt.t -> (Expr.t * Expr.t) list =
   | Expr e | Assume e -> expr_derefs e
   | Call { actuals; _ } -> List.bind actuals ~f:expr_derefs
   | Skip -> []
-  | Array_write _ | Exceptional_call _ -> failwith "todo"
+  | Array_write _ | Exceptional_call _ -> failwith "todo arr or exc call"
 
 (** Some(true/false) indicates [idx] is definitely in/out-side of [addr]'s bounds;
     None indicates it could be either
@@ -596,6 +597,7 @@ let is_setter meth =
 
 let approximate_missing_callee ~caller_state ~callsite =
   (* as described in [interpret] above, forget used tmp vars after they are used *)
+  (* print_endline @@ Format.asprintf "%a" Ast.Stmt.pp callsite; *)
   forget_used_tmp_vars callsite
   @@
   match callsite with
@@ -620,6 +622,11 @@ let approximate_missing_callee ~caller_state ~callsite =
       (* we (unsoundly) assume that any call `o.setFoo(x)` method is equivalent to `o.foo = x` *)
       let field = String.uncapitalize (String.chop_prefix_exn meth ~prefix:"set") in
       interpret Ast.(Stmt.Write { rcvr; field; rhs }) caller_state
+    (* __nondet() means a value in some hard-coded range *)
+  | Ast.Stmt.Call { lhs = Some lhs; rcvr = _; meth = "__nondet"; actuals = []; alloc_site = None } ->
+    let lhs = Var.of_string lhs in 
+    let am, itv = caller_state in
+    (am, Itv.add_constrained_var itv lhs)
   | Ast.Stmt.Call { lhs; rcvr; meth = _; actuals; alloc_site = None } ->
       (* for a call to an unknown function `x = o.foo(y1,y2,,...)`, we forget any constraints on:
          (1) fields of rcvr o

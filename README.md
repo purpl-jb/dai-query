@@ -1,8 +1,13 @@
 # Demanded Abstract Interpretation with Queries
 
-## Build
+Original project:
+_incremental_ and _demand-driven_ abstract interpretation framework in OCaml
 
-_Incremental_ and _demand-driven_ abstract interpretation framework in OCaml
+Current project:
+semantic queries over demanded abstract interpretation graphs
+
+
+## Build
 
 DAI requires:
  * OCaml version 4.09.0+ (definitely works with 4.13.1)
@@ -11,7 +16,11 @@ DAI requires:
  * System packages: libgmp-dev libmpfr-dev (for APRON numerical domains)
  * [Adapton](https://github.com/plum-umd/adapton.ocaml) version 0.1-dev (pinned as a local OPAM package via `make install`, per its README)
  * **[UPD]** Tree sitter for Java (see instructions below)
- * **[UPD]** Graphviz (for processing `.dot` files)
+
+ Additionally, the project requires:
+ * Graphviz (for processing `.dot` files)
+ * python3 (for building callgraphs with WALA)
+ * Java 8 or 11 (for building callgraphs with WALA)
 
 Build with `make build`.
 
@@ -30,19 +39,31 @@ Build with `make build`.
 **Note.** Compared to the forked repo, in file `src/frontend/dune`,
 the library `tree_sitter_java` is replaced with `tree-sitter-lang.java`.
 
-## Building callgraphs
+
+## Building callgraphs for interprocedural analyses
+
 - `git submodule init && git submodule update`
 - `cd WALA-callgraph`
 - Ensure you have Java 8 or 11 installed, with gradle 7.6
-- `git apply ../build.gradle.patch`
 - `./gradlew compileJava`
 
-From `usertest`: `javac ArrayFun.java`, `jar cfe ArrayFun.jar ArrayFun ArrayFun.class`,
-(make sure the resulting jar is good by `java -jar ArrayFun.jar`
-which should fail with array out of bounds).
+To easily build a callgraph, use the script
+[`build-callgraph.py`](build-callgraph.py) (requires python3):
 
-From WALA-callgraph: 
-`./run.py ../usertest/ArrayFun.callgraph ../usertest/ArrayFun.jar`
+```
+./build-callgraph.py usertest/ArrayFun.java
+```
+
+To build a callgraph manually:
+
+- From `usertest`: 
+  + `javac ArrayFun.java`
+  + `jar cfe ArrayFun.jar ArrayFun ArrayFun.class`
+    (make sure the resulting jar is good by `java -jar ArrayFun.jar`
+    which should fail with array out of bounds).
+- From WALA-callgraph: 
+  `./run.py ../usertest/ArrayFun.callgraph ../usertest/ArrayFun.jar`
+
 
 ## Experiment with DAI
 
@@ -56,15 +77,33 @@ Analyzed graphs are stored in `.dot` files.
   using Graphviz.
 - The resulting graphs can be found in `_build/default/`.
 
+### Notes on DAI's features
+
+It seems dynamic arrays aren't supported in any capacity (searching 
+`Expr.Array_create` shows that neither domains implements this construct),
+so it's impossible to write any meaningful array-processing code, unfortunately.
+
+Ouch, DAI's **array-related analysis is unsound**!
+For an array inside a function, manipulating the array element removes 
+it from the state. Then, the effect of the function is not reflected
+in the memory state inside the main function.
+See `usertest/ArraySwap.java` for an example.
+
+
 ## Semantic Querying
 
 File [`src/semqrunner.ml`](src/semqrunner.ml)
 provides a simple command-line interface for
-exploring DAIG abstract states (see the script for more info).
+exploring DAIG abstract states (see the script for more info)
+for interval (or octagon) domain.
 
 Run
 `_build/default/src/semqrunner.exe _build/default/usertest/Sum.java`
 as an example.
+- if there is a callgraph file with the same name,
+  `_build/default/usertest/Sum.callgraph`,
+  an inter-procedural analysis is performed using a DSG;
+- otherwise, only an intra-procedural analysis is performed.
 
 ## Graph exploration
 
@@ -74,4 +113,18 @@ Locations originating from the control-flow graph are denoted with `l<number>`.
 They can be visually identified in `.ps` files as `l<number>: <abstract state>`
 in green-bordered rectangles.
 
+Programmatically, locations have the type `Syntax.Cfg.Loc.t`.
 
+A location with a given integer index can be obtained with
+`Syntax.Cfg.Loc.of_int_unsafe`.
+
+### Abstract state
+
+To access abstract state at a given location, use `Analysis.Daig.read_by_loc`;
+if the state isn't computed, returns `None`.
+
+To request abstract state (and compute if not yet),
+use `Analysis.Daig.get_by_loc`.
+
+**Note.** It seems that unconcstrained variables in abstract state
+are not printed out.

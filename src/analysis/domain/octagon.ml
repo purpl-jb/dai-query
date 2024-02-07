@@ -34,7 +34,7 @@ open Syntax
 type t = Oct.t Abstract1.t
 
 (* "magic" constant bounding the dimensionality of octagons *)
-let max_env_size = 5
+let max_env_size = 15 (* JB: increased from 5 *)
 
 let man = lazy (Oct.manager_alloc ())
 
@@ -112,13 +112,14 @@ let init = top
 
 (* given a boolean operation : [Tcons0.typ] and two operands, construct a Tcons1 encoding the constraint *)
 let mk_tcons env op l r =
+  (* JB: I uncommented [let r = ...] because otherwise [<] isn't computed correctly *)
   (* add tiny constant to right hand side to avoid float comparison wonkiness*)
-  (* let r =
+  let r =
      if op = Tcons0.SUP then
        Texpr1.Binop
          (Texpr1.Add, r, Texpr1.Cst (Coeff.s_of_float 0.000001), Texpr1.Double, Texpr1.Zero)
      else r
-     in*)
+  in
   let l_minus_r = Texpr1.Binop (Texpr1.Sub, l, r, Texpr1.Double, Texpr1.Zero) in
   Tcons1.make (Texpr1.of_expr env l_minus_r) op
 
@@ -270,7 +271,10 @@ let eval_texpr oct expr =
 
 let extend_env_by_uses stmt oct =
   let env = Abstract1.env oct in
-  if Environment.size env >= max_env_size then oct
+  (* JB: silently doing this is unsound! *)
+  (* if Environment.size env >= max_env_size then oct *)
+  if Environment.size env >= max_env_size then
+    failwith "too many variables in octagon"
   else
     let man = get_man () in
     (* adding RETVAR here is a hack -- not sure why, but apron complains down the line if RETVAR
@@ -282,7 +286,9 @@ let extend_env_by_uses stmt oct =
     if Set.is_empty new_uses then oct
     else
       new_uses |> Set.to_array |> Array.map ~f:Var.of_string |> Environment.add env [||]
-      |> fun new_env -> change_environment man oct new_env true
+      |> fun new_env -> change_environment man oct new_env false (* true *)
+      (* JB: I changed true to false here to avoid initializing unknown variables with 0;
+         not sure if it breaks anything *)
 
 let interpret stmt oct =
   let open Ast.Stmt in
@@ -294,7 +300,10 @@ let interpret stmt oct =
   | Assign { lhs; rhs } -> (
       let lhs = Var.of_string lhs in
       let env = Abstract1.env oct in
-      if Environment.size env >= max_env_size then oct
+      (* JB: silently doing this is unsound! *)
+      (* if Environment.size env >= max_env_size then oct *)
+      if Environment.size env >= max_env_size then
+        failwith "too many variables in octagon"
       else
         let new_env =
           if Environment.mem_var env lhs then env else Environment.add env [||] [| lhs |]
@@ -304,6 +313,7 @@ let interpret stmt oct =
         | Some rhs_texpr ->
             Abstract1.assign_texpr man oct_new_env lhs (Texpr1.of_expr new_env rhs_texpr) None
         | None ->
+            print_endline @@ "(JB) SUSPICIOUS assignment to var " ^ (Var.to_string lhs);
             if Environment.mem_var env lhs then
               (* lhs was constrained, quantify that out *)
               Abstract1.forget_array man oct [| lhs |] false
@@ -333,6 +343,10 @@ let call ~callee:_ ~callsite:_ ~caller_state:_ = failwith "todo3"
 let return ~callee:_ ~caller:_ ~callsite:_ ~caller_state:_ ~return_state:_ = failwith "todo4"
 
 let approximate_missing_callee ~caller_state:_ ~callsite:_ = failwith "todo5"
+(* JB: copying something from array_bounds to allow for random booleans
+let approximate_missing_callee ~caller_state ~callsite = 
+  match callsite with *)
+
 
 (*let handle_return ~caller_state ~return_state ~callsite ~callee_defs:_ =
   match callsite with
