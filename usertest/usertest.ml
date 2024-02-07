@@ -34,10 +34,11 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 		true
 		
 	(* JB: this code is mostly copied from src/analysis/dsg.ml *)
-	let test_interprocedural fname = 
+	let test_interprocedural_files files = 
 		let ({ cfgs; fields; _ } : Frontend.Cfg_parser.prgm_parse_result) =
-		  Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
+		  Frontend.Cfg_parser.parse_files_exn ~files:(List.map ~f:(fun name -> (abs_of_rel_path (dname ^ name ^ ".java"))) files)
 		in
+    let fname = (List.hd_exn files) in
 		let dsg : Dsg.t = Dsg.init ~cfgs in
 		let fns = Syntax.Cfg.Fn.Map.keys dsg in
 		let main_fn = List.find_exn fns ~f:Syntax.Cfg.Fn.is_main_fn in
@@ -55,6 +56,9 @@ module Test (Dom : Domain.Abstract.Dom) = struct
             SemqrProc.read_absst_by_loc main_fn.exit main_daig;
 		let _ = Dsg.dump_dot ~filename:(abs_of_rel_path ("solved_" ^ fname ^ ".dsg.dot")) dsg in
 		true
+
+    let test_interprocedural fname =
+      test_interprocedural_files [fname]
 end
 
 (* Domain modules we've tried:
@@ -104,6 +108,9 @@ let%test "User test: simple interprocedural with array bounds" =
 let%test "User test: interprocedural static arrays with array bounds" =
   TestArrBounds.test_interprocedural "ArrayFun"
 
+let%test "User test: interprocedural with multiple files" =
+  TestArrBounds.test_interprocedural_files ["MultiFile"; "SimpleFuns"]
+  
 let%test "User test: interprocedural array-contains with array bounds" =
   TestArrBounds.test_interprocedural "ArrayContains"
 
