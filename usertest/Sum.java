@@ -7,6 +7,7 @@ class Sum {
         boolean test1 = b < a;
         boolean test2 = b == a;
         int c = 0;
+        int div0 = a / c; // evals to [-inf;inf] with intervals
         if (unknown) {
           c = a + b;
         }
