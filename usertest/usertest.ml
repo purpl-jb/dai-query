@@ -10,12 +10,8 @@ module Test (Dom : Domain.Abstract.Dom) = struct
 
   let entry_state = Dom.init ()
 
-  (* JB: this code is mostly copied from src/analysis/daig.ml *)
-	let test_simple fname = 
-		let ({ cfgs; _ } : Frontend.Cfg_parser.prgm_parse_result) =
-		  Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
-		in
-		Map.to_alist cfgs
+  let test_simple_cfg fname cfgs =
+    Map.to_alist cfgs
 		|> List.iter ~f:(fun (fn, cfg) ->
           let daig = Daig.of_cfg ~entry_state ~cfg ~fn in
           let fname_ = fname ^ "_" in
@@ -32,6 +28,18 @@ module Test (Dom : Domain.Abstract.Dom) = struct
             SemqrProc.read_absst_by_loc fn.exit analyzed_daig
        );
 		true
+
+  let test_simple fname = 
+    let ({ cfgs; _ } : Frontend.Cfg_parser.prgm_parse_result) =
+      Frontend.Cfg_parser.parse_file_exn (abs_of_rel_path (dname ^ fname ^ ".java"))
+    in
+    test_simple_cfg fname cfgs
+
+  let test_simple_str fname s  =
+    let ({ cfgs; _ } : Frontend.Cfg_parser.prgm_parse_result) =
+      Frontend.Cfg_parser.parse_str_exn s
+    in
+    test_simple_cfg fname cfgs    
 		
 	(* JB: this code is mostly copied from src/analysis/dsg.ml *)
 	let test_interprocedural_files files = 
@@ -71,6 +79,9 @@ module TestArrBounds = Test (Domain.Array_bounds)
 module TestOct = Test (Domain.Octagon)
 module TestOctArrBounds = Test (Domain.Oct_array_bounds)
 module TestNull = Test (Domain.Null_dom)
+
+let%test "User test: simple sum with intervals" =
+  TestInt.test_simple_str "SumInStr" "class Sum { public static void main(String[] args) { int x = 0; for (int i = 0; i < 10; i++) { x += i; }; } }"
 
 let%test "User test: simple sum and if with intervals" =
   TestInt.test_simple "Sum"
