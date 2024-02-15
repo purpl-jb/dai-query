@@ -9,6 +9,8 @@ let lines = Ts_src_file.lines
 
 let of_file = Ts_src_file.load_file
 
+let of_string s = Ts_src_file.load_string ~src_name:"given string" s
+
 let line_offsets = lines >> Array.map ~f:(String.length >> Int.succ) >> Array.to_list
 
 let read_fn file _byte_offset row col =

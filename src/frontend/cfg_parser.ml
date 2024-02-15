@@ -1443,12 +1443,19 @@ let of_java_cst ?(acc = empty_parse_result) (cst : CST.program) : prgm_parse_res
         in
         unimplemented (first_atom (CST.sexp_of_statement stmt) ^ "-at-top-level") acc)
 
-let parse_file_exn ?(acc = empty_parse_result) filename =
-  let file = Src_file.of_file filename in
+let parse_src_file ?(acc = empty_parse_result) (file : Src_file.t) : prgm_parse_result =
   let tree = Result.bind (Tree.parse ~old_tree:None ~file) ~f:(Tree.as_java_cst file) in
   match tree with
   | Ok tree -> of_java_cst ~acc tree
-  | Error _e -> failwith @@ "parse error in " ^ filename
+  | Error _e -> failwith @@ "parse error in " ^ Option.value (Src_file.path file) ~default:"string or no filepath found"
+
+let parse_file_exn ?(acc = empty_parse_result) filename =
+  let file = Src_file.of_file filename in
+  parse_src_file ~acc file
+
+let parse_str_exn s =
+  let file = Src_file.of_string s in
+  parse_src_file file
 
 let parse_tree_exn ?(acc = empty_parse_result) filename tree =
   let file = Src_file.of_file filename in

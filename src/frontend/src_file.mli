@@ -11,3 +11,6 @@ val line_offsets : t -> int list
 
 val read_fn : t -> int -> int -> int -> string option
 (** create a read function to be passed to tree-sitter (see TSInput struct of tree-sitter C API) *)
+
+val of_string: string -> t
+(** create a source file from a string *)

@@ -36,6 +36,9 @@ val parse_file_exn : ?acc:prgm_parse_result -> string -> prgm_parse_result
 val parse_files_exn : files:string list -> prgm_parse_result
 (** Parse some (java) source [files] to CFGs *)
 
+val parse_str_exn : string -> prgm_parse_result
+(** Parse a (java) source string to CFGs *)
+
 val parse_trees_exn : trees:(string * Tree.t) list -> prgm_parse_result
 (** Translate the given tree-sitter parse [trees] to CFGs *)
 
